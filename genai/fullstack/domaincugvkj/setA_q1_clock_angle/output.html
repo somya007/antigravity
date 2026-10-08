@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clock Angle Calculator - Output Demo</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
+    .container {
+      max-width: 400px;
+      margin: 50px auto;
+      padding: 30px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-family: Arial, sans-serif;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      background: white;
+    }
+    h1 { text-align: center; color: #333; margin-bottom: 20px; font-size: 22px; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+    input {
+      width: 100%; padding: 10px; border: 1px solid #ccc;
+      border-radius: 5px; font-size: 16px; box-sizing: border-box;
+    }
+    input[readonly] { background-color: #e9ecef; font-weight: bold; color: #28a745; }
+    .button-group { display: flex; gap: 10px; margin-bottom: 15px; }
+    button {
+      flex: 1; padding: 10px; background-color: #007bff; color: white;
+      border: none; border-radius: 5px; font-size: 16px; cursor: pointer;
+    }
+    button:hover { background-color: #0056b3; }
+    .reset-btn { background-color: #6c757d; }
+    .reset-btn:hover { background-color: #545b62; }
+    .error { color: red; font-size: 14px; margin-top: 10px; text-align: center; display: none; }
+    .output-title { text-align: center; color: #666; font-size: 14px; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <p class="output-title"><b>SET A - Question 1: Clock Angle Calculator (Angular Output)</b></p>
+  <div class="container">
+    <h1>Clock Angle Calculator</h1>
+    <div class="form-group">
+      <label for="hour">Hour (1-12):</label>
+      <input type="number" id="hour" placeholder="Enter hour" min="1" max="12" value="3" />
+    </div>
+    <div class="form-group">
+      <label for="minute">Minute (0-59):</label>
+      <input type="number" id="minute" placeholder="Enter minute" min="0" max="59" value="30" />
+    </div>
+    <div class="button-group">
+      <button onclick="calculateAngle()">Calculate Angle</button>
+      <button onclick="resetForm()" class="reset-btn">Reset</button>
+    </div>
+    <div class="form-group" id="result-group" style="display:block;">
+      <label for="result">Angle between hands:</label>
+      <input type="text" id="result" value="75 degrees" readonly />
+    </div>
+    <div class="error" id="error"></div>
+  </div>
+
+  <script>
+    function calculateAngle() {
+      var hour = parseInt(document.getElementById('hour').value);
+      var minute = parseInt(document.getElementById('minute').value);
+      var errorDiv = document.getElementById('error');
+      var resultGroup = document.getElementById('result-group');
+      errorDiv.style.display = 'none';
+      
+      if (isNaN(hour) || isNaN(minute)) {
+        errorDiv.textContent = 'Please enter both hour and minute values.';
+        errorDiv.style.display = 'block';
+        resultGroup.style.display = 'none';
+        return;
+      }
+      if (hour < 1 || hour > 12) {
+        errorDiv.textContent = 'Hour must be between 1 and 12.';
+        errorDiv.style.display = 'block';
+        resultGroup.style.display = 'none';
+        return;
+      }
+      if (minute < 0 || minute > 59) {
+        errorDiv.textContent = 'Minute must be between 0 and 59.';
+        errorDiv.style.display = 'block';
+        resultGroup.style.display = 'none';
+        return;
+      }
+
+      var hourAngle = (hour % 12) * 30 + minute * 0.5;
+      var minuteAngle = minute * 6;
+      var diff = Math.abs(hourAngle - minuteAngle);
+      if (diff > 180) diff = 360 - diff;
+
+      document.getElementById('result').value = diff + ' degrees';
+      resultGroup.style.display = 'block';
+    }
+
+    function resetForm() {
+      document.getElementById('hour').value = '';
+      document.getElementById('minute').value = '';
+      document.getElementById('result').value = '';
+      document.getElementById('result-group').style.display = 'none';
+      document.getElementById('error').style.display = 'none';
+    }
+  </script>
+</body>
+</html>

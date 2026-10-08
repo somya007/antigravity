@@ -1,0 +1,31 @@
+.card {
+  border: 2px solid #4CAF50;
+  border-radius: 10px;
+  padding: 20px;
+  margin: 10px;
+  background-color: #f0fff0;
+}
+
+h2 {
+  color: #2E7D32;
+}
+
+.offer {
+  font-size: 18px;
+  font-weight: bold;
+  color: #FF5722;
+  background-color: #FFF3E0;
+  padding: 10px;
+  border-radius: 5px;
+  text-align: center;
+}
+
+ul {
+  list-style-type: disc;
+  padding-left: 20px;
+}
+
+li {
+  padding: 5px 0;
+  font-size: 16px;
+}

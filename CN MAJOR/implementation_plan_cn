@@ -1,0 +1,282 @@
+# CRC-Based Error Detection System with ML Error Impact Predictor
+
+## Overview
+
+Build a robust, M.Tech-level CRC error detection and correction system in **Python** with:
+1. Modular CRC Encoder/Decoder (CRC-16, CRC-32) using bitwise XOR modulo-2 division
+2. Noise Injection Module (single-bit, multi-bit, burst errors)
+3. ML-based Error Impact Predictor (Random Forest + XGBoost)
+4. Advanced BP Decoding + ORBGRAND error correction flow
+5. Comprehensive evaluation metrics and visualizations
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Language Choice**: The entire project will be implemented in **Python** (not C++). Python provides sufficient performance for simulation of 100K frames and integrates seamlessly with ML libraries (scikit-learn, XGBoost) and visualization (matplotlib, seaborn). If you need a C++ implementation for the core CRC module, please let me know.
+
+> [!IMPORTANT]
+> **ORBGRAND Scope**: The ORBGRAND implementation will be a simplified simulation that demonstrates the core concept (ordered noise pattern guessing with CRC as stopping criterion). A full hardware-level ORBGRAND would require a significantly larger scope.
+
+> [!WARNING]
+> **BP Decoding**: Standard Belief Propagation is designed for codes with sparse parity-check matrices (LDPC, Polar). For CRC codes, we will implement a simplified BP-like soft-decision decoder that uses bit reliability information, and then fall back to ORBGRAND when BP fails. This follows the flowchart logic faithfully while remaining mathematically sound.
+
+---
+
+## Proposed Directory Structure
+
+```
+c:\RISK_ASSESSMENT\CN MAJOR\
+├── README.md
+├── requirements.txt
+├── config.py                        # Global configuration & polynomial definitions
+│
+├── core/
+│   ├── __init__.py
+│   ├── crc_encoder.py               # CRC encoding (modulo-2 division, polynomial arithmetic)
+│   ├── crc_decoder.py               # CRC verification (zero-remainder check)
+│   ├── data_framing.py              # Raw binary → fixed-size frames
+│   └── polynomials.py               # Standard CRC polynomial definitions
+│
+├── channel/
+│   ├── __init__.py
+│   ├── noise_injector.py            # Single-bit, multi-bit, burst error injection
+│   └── channel_model.py             # BSC/burst channel simulation with soft outputs
+│
+├── decoding/
+│   ├── __init__.py
+│   ├── bp_decoder.py                # Belief Propagation soft-decision decoder
+│   └── orbgrand_decoder.py          # ORBGRAND trial decoding with CRC stopping criterion
+│
+├── ml/
+│   ├── __init__.py
+│   ├── dataset_generator.py         # Generate 100K frame dataset with features
+│   ├── feature_engineering.py       # Feature extraction (BER, burst length, etc.)
+│   ├── model_training.py            # Random Forest + XGBoost training
+│   └── model_evaluation.py          # Confusion matrix, classification report, ROC
+│
+├── evaluation/
+│   ├── __init__.py
+│   ├── metrics.py                   # Throughput, computational overhead, detection accuracy
+│   ├── checksum_comparison.py       # CRC vs. standard checksum comparison
+│   └── reliability_score.py         # Data integrity scoring
+│
+├── visualization/
+│   ├── __init__.py
+│   ├── plot_detection_efficiency.py # Detection efficiency vs. burst length
+│   ├── plot_confusion_matrix.py     # ML model confusion matrix
+│   ├── plot_performance.py          # Throughput, overhead plots
+│   └── plot_roc_curve.py            # ROC/AUC curve for ML model
+│
+├── tests/
+│   ├── test_crc.py                  # Unit tests for CRC encode/decode
+│   ├── test_noise.py                # Unit tests for noise injection
+│   ├── test_orbgrand.py             # Unit tests for ORBGRAND decoder
+│   └── test_pipeline.py            # Integration tests
+│
+├── main.py                          # Full pipeline orchestrator
+├── run_ml_pipeline.py               # ML training & evaluation entry point
+├── run_visualization.py             # Generate all plots
+└── outputs/
+    ├── models/                      # Saved ML models
+    ├── datasets/                    # Generated CSV datasets
+    ├── plots/                       # Generated visualization images
+    └── reports/                     # Evaluation reports
+```
+
+---
+
+## Proposed Changes
+
+### Phase 1: Core CRC Logic
+
+#### [NEW] [config.py](file:///c:/RISK_ASSESSMENT/CN%20MAJOR/config.py)
+- Global configuration constants
+- Frame sizes, number of simulations, random seeds
+- Polynomial selection parameters
+
+#### [NEW] [polynomials.py](file:///c:/RISK_ASSESSMENT/CN%20MAJOR/core/polynomials.py)
+- Define standard CRC polynomials:
+  - **CRC-16-CCITT**: `0x1021` (width=16, init=0xFFFF)
+  - **CRC-16-IBM**: `0x8005` (width=16)
+  - **CRC-32-ISO**: `0x04C11DB7` (width=32, init=0xFFFFFFFF, xor_out=0xFFFFFFFF, reflect)
+- Each polynomial stored as a dataclass with: `poly`, `width`, `init`, `xor_out`, `reflect_in`, `reflect_out`
+
+#### [NEW] [crc_encoder.py](file:///c:/RISK_ASSESSMENT/CN%20MAJOR/core/crc_encoder.py)
+- `CRCEncoder` class with:
+  - `encode(message_bits: List[int]) -> List[int]`: Appends CRC remainder to message
+  - `_modulo2_division(dividend: List[int], divisor: List[int]) -> List[int]`: Core XOR division
+  - `_reflect_bits(value: int, width: int) -> int`: Bit reflection for standard compliance
+- Mathematical foundation: $T(x) = x^r \cdot M(x) + R(x)$, where $R(x) = x^r \cdot M(x) \mod G(x)$
+
+#### [NEW] [crc_decoder.py](file:///c:/RISK_ASSESSMENT/CN%20MAJOR/core/crc_decoder.py)
+- `CRCDecoder` class with:
+  - `verify(received_bits: List[int]) -> bool`: Check if remainder is zero
+  - `get_syndrome(received_bits: List[int]) -> List[int]`: Return syndrome for error analysis
+
+#### [NEW] [data_framing.py](file:///c:/RISK_ASSESSMENT/CN%20MAJOR/core/data_framing.py)
+- `DataFramer` class to divide raw binary data into fixed-size frames
+- Support for variable frame lengths (64, 128, 256, 512, 1024 bits)
+
+---
+
+### Phase 2: Channel & Noise Simulation
+
+#### [NEW] [noise_injector.py](file:///c:/RISK_ASSESSMENT/CN%20MAJOR/channel/noise_injector.py)
+- `NoiseInjector` class with methods:
+  - `inject_single_bit_error(frame)`: Flip exactly 1 random bit
+  - `inject_multi_bit_error(frame, num_errors)`: Flip N random bits
+  - `inject_burst_error(frame, burst_length)`: Flip consecutive bits of given length
+  - `inject_random_errors(frame, ber)`: Flip bits with probability = BER
+- Return both corrupted frame and error pattern (for analysis)
+
+#### [NEW] [channel_model.py](file:///c:/RISK_ASSESSMENT/CN%20MAJOR/channel/channel_model.py)
+- `ChannelModel` class simulating:
+  - Binary Symmetric Channel (BSC) with configurable crossover probability
+  - Gilbert-Elliott burst channel model
+  - Generate soft-decision reliability values (log-likelihood ratios) for each bit
+  - Output: `(received_hard_bits, reliability_values)`
+
+---
+
+### Phase 3: Advanced Decoding (BP + ORBGRAND)
+
+#### [NEW] [bp_decoder.py](file:///c:/RISK_ASSESSMENT/CN%20MAJOR/decoding/bp_decoder.py)
+- `BPDecoder` class implementing simplified soft-decision decoding:
+  - Uses bit reliability (LLR) from the channel
+  - Performs iterative message passing on a factor graph derived from the CRC polynomial's parity-check matrix
+  - `decode(received_bits, llr_values, max_iterations=50) -> (decoded_bits, success)`
+  - Early termination when CRC check passes
+
+#### [NEW] [orbgrand_decoder.py](file:///c:/RISK_ASSESSMENT/CN%20MAJOR/decoding/orbgrand_decoder.py)
+- `ORBGRANDDecoder` class implementing:
+  - Sort bits by reliability (ascending) — least reliable first
+  - Generate noise patterns in order of decreasing likelihood:
+    1. Single-bit flips (least reliable bit first)
+    2. Two-bit flips (ordered by combined unreliability)
+    3. Higher-weight patterns up to a configurable max weight
+  - For each pattern: XOR with received word → check CRC
+  - **CRC as stopping criterion**: If CRC passes, return corrected word
+  - `decode(received_bits, reliability, max_queries=10000) -> (corrected_bits, success, queries_used)`
+  - Timeout/max-query limit to prevent infinite search
+
+---
+
+### Phase 4: ML Pipeline
+
+#### [NEW] [dataset_generator.py](file:///c:/RISK_ASSESSMENT/CN%20MAJOR/ml/dataset_generator.py)
+- Generate 100,000 frames with varying:
+  - Frame lengths: [64, 128, 256, 512, 1024]
+  - Polynomials: [CRC-16-CCITT, CRC-16-IBM, CRC-32]
+  - Noise types: [None, Single-bit, Multi-bit, Burst]
+  - BER values: [0.001, 0.005, 0.01, 0.05, 0.1]
+  - Burst lengths: [2, 4, 8, 16, 32, 64]
+- Features extracted per frame:
+  - `frame_length`, `polynomial_type`, `polynomial_degree`, `noise_type`, `ber`, `burst_length`, `num_errors_injected`, `error_density`
+- Target:
+  - `detected` (1 = CRC caught the error, 0 = undetected/aliasing)
+
+#### [NEW] [model_training.py](file:///c:/RISK_ASSESSMENT/CN%20MAJOR/ml/model_training.py)
+- Train two classifiers:
+  - **Random Forest** (n_estimators=200, max_depth tuned via GridSearchCV)
+  - **XGBoost** (learning_rate, max_depth, n_estimators tuned via GridSearchCV)
+- 5-fold stratified cross-validation
+- Train on predicting `undetected_error` probability
+- Save trained models to `outputs/models/`
+
+#### [NEW] [model_evaluation.py](file:///c:/RISK_ASSESSMENT/CN%20MAJOR/ml/model_evaluation.py)
+- Classification report (precision, recall, F1)
+- Confusion matrix
+- ROC-AUC curve
+- Feature importance ranking
+- Predict probability of burst error bypassing CRC under given channel conditions
+
+---
+
+### Phase 5: Evaluation & Comparison
+
+#### [NEW] [metrics.py](file:///c:/RISK_ASSESSMENT/CN%20MAJOR/evaluation/metrics.py)
+- `compute_throughput(frame_sizes, encoding_times)`: Bits/second
+- `compute_overhead(frame_size, crc_computation_time)`: Time per frame vs. frame size
+- `compute_detection_accuracy(total_errors, detected_errors)`: Percentage
+- `burst_detection_rate(results_df)`: % of burst errors (length > polynomial degree) undetected
+
+#### [NEW] [checksum_comparison.py](file:///c:/RISK_ASSESSMENT/CN%20MAJOR/evaluation/checksum_comparison.py)
+- Implement standard Internet checksum (ones-complement sum)
+- Run same test suite on both CRC and checksum
+- Compare detection rates across error types
+
+#### [NEW] [reliability_score.py](file:///c:/RISK_ASSESSMENT/CN%20MAJOR/evaluation/reliability_score.py)
+- Compute Hamming distance between original and received frames
+- Compare data integrity before and after CRC + correction
+
+---
+
+### Phase 6: Visualization
+
+#### [NEW] [plot_detection_efficiency.py](file:///c:/RISK_ASSESSMENT/CN%20MAJOR/visualization/plot_detection_efficiency.py)
+- **Detection Efficiency vs. Burst Length** (key deliverable)
+- Plot for each CRC polynomial: detection rate as burst length increases
+- Highlight critical point where burst length = polynomial degree
+
+#### [NEW] [plot_confusion_matrix.py](file:///c:/RISK_ASSESSMENT/CN%20MAJOR/visualization/plot_confusion_matrix.py)
+- Heatmap confusion matrix for both RF and XGBoost models
+
+#### [NEW] [plot_performance.py](file:///c:/RISK_ASSESSMENT/CN%20MAJOR/visualization/plot_performance.py)
+- Throughput vs. frame size
+- Computational overhead vs. frame size
+- CRC vs. Checksum detection rate comparison bar chart
+
+#### [NEW] [plot_roc_curve.py](file:///c:/RISK_ASSESSMENT/CN%20MAJOR/visualization/plot_roc_curve.py)
+- ROC curves with AUC for both ML models
+
+---
+
+### Entry Points
+
+#### [NEW] [main.py](file:///c:/RISK_ASSESSMENT/CN%20MAJOR/main.py)
+- Full pipeline orchestrator:
+  1. Generate frames → Encode with CRC → Inject noise → Decode
+  2. Attempt BP decoding → If fail, ORBGRAND → Final CRC verification
+  3. Log results to dataset
+  4. Train ML models
+  5. Evaluate and visualize
+
+#### [NEW] [run_visualization.py](file:///c:/RISK_ASSESSMENT/CN%20MAJOR/run_visualization.py)
+- Standalone script to regenerate all plots from saved data
+
+---
+
+## Open Questions
+
+> [!IMPORTANT]
+> 1. **Pure Python vs. C++ core?** The plan uses pure Python. If you need a C++ CRC implementation (for speed comparison or as a requirement), please confirm.
+> 2. **ORBGRAND max query limit?** I plan to use 10,000 queries as the default timeout. Is this acceptable for your evaluation?
+> 3. **Additional ML models?** The plan includes Random Forest and XGBoost. Do you also want a Neural Network (MLP) classifier for comparison?
+
+---
+
+## Verification Plan
+
+### Automated Tests
+```bash
+# Run all unit tests
+python -m pytest tests/ -v
+
+# Run CRC encode/decode correctness tests
+python -m pytest tests/test_crc.py -v
+
+# Verify ORBGRAND can correct single-bit errors
+python -m pytest tests/test_orbgrand.py -v
+
+# Run full pipeline integration test
+python -m pytest tests/test_pipeline.py -v
+```
+
+### Manual Verification
+- Verify CRC-32 output matches `zlib.crc32()` for known test vectors
+- Inspect generated dataset CSV for correct feature distributions
+- Review all generated plots in `outputs/plots/`
+- Confirm confusion matrix aligns with expected detection rates
+- Verify ORBGRAND corrects errors that BP fails on

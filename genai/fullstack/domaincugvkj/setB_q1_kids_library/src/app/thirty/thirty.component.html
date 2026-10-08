@@ -1,0 +1,9 @@
+<div class="card">
+  <h2>Children Born in Months with 30 Days (Including February)</h2>
+  <p class="offer">Get one book free</p>
+  <ul>
+    <li *ngFor="let child of children">
+      {{ child.name }} ({{ child.monthBorn }}, Age: {{ child.age }})
+    </li>
+  </ul>
+</div>

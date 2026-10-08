@@ -1,0 +1,20 @@
+<div class="container">
+  <h1>{{ title }}</h1>
+  <div class="form-group">
+    <label for="hour">Hour (1-12):</label>
+    <input type="number" id="hour" [(ngModel)]="hour" placeholder="Enter hour" min="1" max="12" />
+  </div>
+  <div class="form-group">
+    <label for="minute">Minute (0-59):</label>
+    <input type="number" id="minute" [(ngModel)]="minute" placeholder="Enter minute" min="0" max="59" />
+  </div>
+  <div class="button-group">
+    <button (click)="calculateAngle()">Calculate Angle</button>
+    <button (click)="reset()" class="reset-btn">Reset</button>
+  </div>
+  <div class="form-group" *ngIf="angle !== null">
+    <label for="result">Angle between hands:</label>
+    <input type="text" id="result" [value]="angle + ' degrees'" readonly />
+  </div>
+  <div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
+</div>

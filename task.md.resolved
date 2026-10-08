@@ -1,0 +1,40 @@
+# Generative Dynamic Health Risk Assessment System — Tasks
+
+## Planning
+- [/] Review previous implementation artifacts for context
+- [/] Create implementation plan
+- [ ] Get user approval on plan
+
+## Data Pipeline
+- [ ] Create project skeleton & requirements
+- [ ] Download & setup datasets (MIMIC-III demo, MIMIC-IV demo, CVD)
+- [ ] Build preprocessing pipeline (KNN impute, feature engineering, temporal alignment)
+
+## ML Pipeline
+- [ ] Build tabular branch (XGBoost/LightGBM)
+- [ ] Build temporal branch (LSTM/Transformer)
+- [ ] Build text branch (ClinicalBERT embeddings)
+- [ ] Build cross-modal attention fusion layer
+- [ ] Implement uncertainty estimation (MC Dropout)
+- [ ] Implement training & evaluation pipeline (AUROC, AUPRC, Brier, calibration)
+
+## GenAI Module
+- [ ] Build generative insight engine (Gemini API + fallback)
+- [ ] Implement RAG with medical knowledge base
+- [ ] Add what-if simulator
+
+## Explainability
+- [ ] SHAP / feature importance integration
+- [ ] Patient-level explanation reports
+
+## Frontend (Streamlit)
+- [ ] Patient input panel
+- [ ] Risk visualization (gauge, trajectory, confidence)
+- [ ] Explainability panel (SHAP plots)
+- [ ] Generative insights panel
+- [ ] Model dashboard (metrics, ROC, calibration)
+
+## Verification
+- [ ] Train models on all datasets & verify metrics
+- [ ] End-to-end UI test
+- [ ] Create walkthrough

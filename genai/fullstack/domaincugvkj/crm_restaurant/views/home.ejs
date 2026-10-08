@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant CRM - Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #FF5722;
+            text-align: center;
+        }
+        .menu-section {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .menu-section img {
+            width: 300px;
+            border-radius: 10px;
+            border: 2px solid #ddd;
+            cursor: pointer;
+        }
+        .menu-section img:hover {
+            border-color: #FF5722;
+            box-shadow: 0 2px 8px rgba(255, 87, 34, 0.3);
+        }
+        .customer-section {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fff8f5;
+        }
+        .customer-section h3 {
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        label {
+            display: inline-block;
+            width: 80px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"], input[type="number"] {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 200px;
+        }
+        .add-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 20px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .add-link:hover {
+            background-color: #388E3C;
+        }
+        .logout-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #f44336;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .logout-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome <%= username %></h1>
+
+        <!-- Menu Card Image as Hyperlink -->
+        <div class="menu-section">
+            <h3>Our Menu Card (Click for a Surprise!)</h3>
+            <a href="/surprise">
+                <img src="/images/menu.jpg" alt="Menu Card">
+            </a>
+        </div>
+
+        <!-- Customer Information Section -->
+        <div class="customer-section">
+            <h3>Add Customer Information</h3>
+            <form id="customerForm">
+                <div class="form-group">
+                    <label for="age">Age:</label>
+                    <input type="number" id="age" name="age" placeholder="Enter age" required>
+                </div>
+                <div class="form-group">
+                    <label for="mobile">Mobile:</label>
+                    <input type="text" id="mobile" name="mobile" placeholder="Enter mobile" required>
+                </div>
+                <a href="#" class="add-link" onclick="addCustomer()">Add</a>
+            </form>
+        </div>
+
+        <!-- Logout Link -->
+        <a href="/logout" class="logout-link">Logout</a>
+    </div>
+
+    <script>
+        function addCustomer() {
+            var age = document.getElementById('age').value;
+            var mobile = document.getElementById('mobile').value;
+            if (age && mobile) {
+                window.location.href = '/customer?age=' + age + '&mobile=' + mobile;
+            } else {
+                alert('Please enter both age and mobile.');
+            }
+        }
+    </script>
+</body>
+</html>
